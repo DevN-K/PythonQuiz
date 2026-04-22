@@ -14,8 +14,6 @@
     <li><strong>Visueller Fortschrittsbalken</strong> – Zeigt den Fortschritt durch das Quiz</li>
     <li><strong>Sofortiges Feedback</strong> – Richtigkeit wird sofort angezeigt (✅ oder ❌)</li>
     <li><strong>Detaillierte Ergebnisse</strong> – Abschließende Bewertung mit Prozentsatz</li>
-    <li><strong>Responsive Design</strong> – Optimiert für Desktop, Tablet und Mobil</li>
-    <li><strong>Deutsche Benutzeroberfläche</strong> – Vollständig auf Deutsch</li>
     <li><strong>Moderne UI</strong> – Mit Tailwind CSS und sanften Animationen</li>
   </ul>
 
@@ -44,14 +42,6 @@
       <td style="border: 1px solid #ddd; padding: 12px;">REST API Endpoints</td>
     </tr>
   </table>
-
-  <hr style="border: none; border-top: 2px solid #ddd; margin: 30px 0;">
-
-  <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">📋 Anforderungen</h2>
-  <ul style="font-size: 16px; line-height: 1.8; color: #333; margin-left: 20px;">
-    <li>Python 3.7+</li>
-    <li>Ein Python Web-Framework (z.B. Flask oder Django)</li>
-    <li>Moderne Browser (Chrome, Firefox, Safari, Edge)</li>
   </ul>
 
 </div>
