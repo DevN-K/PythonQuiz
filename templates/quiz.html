@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8 pt-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🐍 Python Quiz</h1>
+            <p class="text-gray-600">Teste dein Python-Wissen!</p>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="bg-white rounded-lg shadow-xl p-8">
+            <!-- Fortschrittsbalken -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-semibold text-gray-700">
+                        Frage <span id="current-question">1</span> von <span id="total-questions">5</span>
+                    </span>
+                    <span id="score" class="text-sm font-semibold text-green-600">Score: 0</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Fragen -->
+            <div id="questions-wrapper"></div>
+
+            <!-- Ergebnis-Screen -->
+            <div id="result-screen" class="hidden text-center">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz abgeschlossen! 🎉</h2>
+                    <div class="inline-block bg-indigo-100 rounded-lg p-8">
+                        <p class="text-gray-600 text-lg mb-2">Dein Ergebnis:</p>
+                        <p class="text-5xl font-bold text-indigo-600">
+                            <span id="final-score">0</span> / <span id="final-total">5</span>
+                        </p>
+                        <p class="text-gray-600 text-lg mt-2" id="percentage"></p>
+                    </div>
+                </div>
+                <button onclick="location.reload()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                    Neu starten
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let quizData = [];
+        let currentQuestion = 0;
+        let score = 0;
+        const answered = new Set();
+
+        function renderQuestion(index) {
+            const container = document.getElementById('questions-wrapper');
+            const question = quizData[index];
+            
+            container.innerHTML = `
+                <div class="mb-8 animate-fade-in">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">${question.frage}</h2>
+                    
+                    <div class="space-y-3">
+                        ${question.optionen.map((option, i) => `
+                            <button 
+                                onclick="selectAnswer(${question.id}, ${i})" 
+                                class="answer-btn w-full p-4 text-left border-2 border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition font-medium text-gray-800"
+                                data-question-id="${question.id}"
+                                data-option-index="${i}"
+                            >
+                                <span class="inline-block w-6 h-6 rounded-full border-2 border-gray-400 mr-3 text-center leading-5 text-xs"></span>
+                                ${option}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div id="feedback-${question.id}" class="mt-6 hidden p-4 rounded-lg font-medium"></div>
+                </div>
+            `;
+
+            updateProgress();
+        }
+
+        function selectAnswer(questionId, optionIndex) {
+            if (answered.has(questionId)) return;
+
+            const button = document.querySelector(`[data-question-id="${questionId}"][data-option-index="${optionIndex}"]`);
+            
+            fetch('/api/check-answer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question_id: questionId, selected_option: optionIndex })
+            })
+            .then(res => res.json())
+            .then(data => {
+                answered.add(questionId);
+                const feedbackDiv = document.getElementById(`feedback-${questionId}`);
+                const allButtons = document.querySelectorAll(`[data-question-id="${questionId}"]`);
+
+                if (data.is_correct) {
+                    score++;
+                    button.classList.add('border-green-500', 'bg-green-50');
+                    feedbackDiv.className = 'mt-6 p-4 rounded-lg font-medium bg-green-100 text-green-800';
+                    feedbackDiv.innerHTML = '✅ Richtig!';
+                } else {
+                    button.classList.add('border-red-500', 'bg-red-50');
+                    const correctBtn = document.querySelector(`[data-question-id="${questionId}"][data-option-index="${data.correct_answer}"]`);
+                    correctBtn.classList.add('border-green-500', 'bg-green-50');
+                    
+                    feedbackDiv.className = 'mt-6 p-4 rounded-lg font-medium bg-red-100 text-red-800';
+                    feedbackDiv.innerHTML = `❌ Falsch! Richtig ist: ${data.correct_text}`;
+                }
+
+                feedbackDiv.classList.remove('hidden');
+                allButtons.forEach(btn => btn.disabled = true);
+
+                document.getElementById('score').textContent = `Score: ${score}`;
+
+                setTimeout(() => {
+                    currentQuestion++;
+                    if (currentQuestion < quizData.length) {
+                        renderQuestion(currentQuestion);
+                    } else {
+                        showResults();
+                    }
+                }, 1500);
+            });
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('current-question').textContent = currentQuestion + 1;
+        }
+
+        function showResults() {
+            document.getElementById('questions-wrapper').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            const percentage = Math.round((score / quizData.length) * 100);
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-total').textContent = quizData.length;
+            document.getElementById('percentage').textContent = `${percentage}% richtig!`;
+        }
+
+        function initQuiz() {
+            document.getElementById('total-questions').textContent = quizData.length;
+            renderQuestion(currentQuestion);
+        }
+
+        // Daten laden und dann Quiz starten
+        fetch('/api/quiz-data')
+            .then(res => res.json())
+            .then(data => {
+                quizData = data;
+                initQuiz();
+            })
+            .catch(err => console.error('Fehler beim Laden der Daten:', err));
+    </script>
+
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-in;
+        }
+    </style>
+</body>
+</html>
