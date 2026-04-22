@@ -31,7 +31,7 @@
     </tr>
     <tr style="background-color: #f9f9f9;">
       <td style="border: 1px solid #ddd; padding: 12px;">Backend</td>
-      <td style="border: 1px solid #ddd; padding: 12px;">Python (Flask/Django empfohlen)</td>
+      <td style="border: 1px solid #ddd; padding: 12px;">Python (Flask)</td>
     </tr>
     <tr>
       <td style="border: 1px solid #ddd; padding: 12px;">Styling</td>
